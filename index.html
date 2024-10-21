@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Directory</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .search-bar input, .search-bar select {
+      padding: 10px 15px;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      transition: border-color 0.3s;
+    }
+
+    .search-bar input:focus, .search-bar select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    .search-bar button {
+      padding: 10px 15px;
+      background-color: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .search-bar button:hover {
+      background-color: #218838;
+    }
+
+    .print-button {
+      padding: 10px 15px;
+      background-color: #17a2b8;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .print-button:hover {
+      background-color: #138496;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .student-card {
+      background: linear-gradient(135deg, #ffffff, #e6e6e6);
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      padding: 20px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+    }
+
+    .student-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    }
+
+    .student-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #007bff;
+      margin: 0 auto 15px auto;
+      display: block;
+    }
+
+    .student-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .student-details {
+      flex: 1;
+      padding-right: 10px;
+    }
+
+    .student-details h2 {
+      text-align: left;
+      color: #007bff;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+
+    .student-details p {
+      color: #555;
+      margin-bottom: 8px;
+      font-size: 0.95em;
+    }
+
+    .student-details .email {
+      color: #888;
+      font-size: 0.85em;
+    }
+
+    .student-dob {
+      text-align: right;
+      background-color: #007bff;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 0.9em;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #cards-grid, #cards-grid * {
+        visibility: visible;
+      }
+
+      #cards-grid {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+
+      .student-card {
+        page-break-inside: avoid;
+      }
+
+      .header, .search-bar, .print-button {
+        display: none;
+      }
+    }
+
+    .modal {
+      display: none;
+      position: fixed; 
+      z-index: 1000; 
+      left: 0;
+      top: 0;
+      width: 100%; 
+      height: 100%; 
+      overflow: auto; 
+      background-color: rgba(0,0,0,0.5); 
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto; 
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; 
+      max-width: 600px;
+      border-radius: 10px;
+      position: relative;
+    }
+
+    .close-button {
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+      color: black;
+      text-decoration: none;
+    }
+
+    .edit-form {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .edit-form input, .edit-form textarea {
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+    }
+
+    .edit-form label {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .edit-form button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+
+    .save-button {
+      background-color: #28a745;
+    }
+
+    .save-button:hover {
+      background-color: #218838;
+    }
+
+    .cancel-button {
+      background-color: #dc3545;
+    }
+
+    .cancel-button:hover {
+      background-color: #c82333;
+    }
+
+    @media (max-width: 768px) {
+      .search-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .search-bar input, .search-bar select {
+        width: 100%;
+      }
+
+      .print-button {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .student-info {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .student-dob {
+        text-align: left;
+        margin-top: 10px;
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Student Directory</h1>
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Search by ID, Name, Course...">
+        <select id="course-filter">
+          <option value="All">All Courses</option>
+        </select>
+        <button id="search-button">Search</button>
+        <button id="print-button" class="print-button">Print Cards</button>
+      </div>
+    </div>
+
+    <div class="cards-grid" id="cards-grid">
+      <p>Loading student data...</p>
+    </div>
+  </div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <div id="modal-body">
+        <p>Loading grade details...</p>
+      </div>
+      <div class="edit-form" id="edit-form">
+        <h3>Edit Student Details</h3>
+        <form id="student-edit-form">
+          <label for="edit-name">Name:</label>
+          <input type="text" id="edit-name" name="Name" required>
+
+          <label for="edit-father-name">Father's Name:</label>
+          <input type="text" id="edit-father-name" name="Father's Name" required>
+
+          <label for="edit-email">Email:</label>
+          <input type="email" id="edit-email" name="Email" required>
+
+          <label for="edit-course">Course:</label>
+          <input type="text" id="edit-course" name="Course" required>
+
+          <label for="edit-city">City:</label>
+          <input type="text" id="edit-city" name="City" required>
+
+          <label for="edit-dob">Date of Birth:</label>
+          <input type="date" id="edit-dob" name="Date of Birth" required>
+
+          <label for="edit-photo-url">Photo URL:</label>
+          <input type="url" id="edit-photo-url" name="Photo URL" required>
+
+          <button type="submit" class="save-button">Save</button>
+          <button type="button" class="cancel-button" id="cancel-edit-button">Cancel</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const cardsGrid = document.getElementById('cards-grid');
+      const searchInput = document.getElementById('search-input');
+      const searchButton = document.getElementById('search-button');
+      const printButton = document.getElementById('print-button');
+      const courseFilter = document.getElementById('course-filter');
+      const modal = document.getElementById('modal');
+      const modalBody = document.getElementById('modal-body');
+      const closeButton = document.querySelector('.close-button');
+      const editFormDiv = document.getElementById('edit-form');
+      const studentEditForm = document.getElementById('student-edit-form');
+      const cancelEditButton = document.getElementById('cancel-edit-button');
+
+      let currentStudentId = null;
+
+      function renderCard(student) {
+        const card = document.createElement('div');
+        card.classList.add('student-card');
+        card.innerHTML = `
+          <img src="${student['Photo URL']}" alt="Photo of ${student['Name']}">
+          <div class="student-info">
+            <div class="student-details">
+              <h2>${student['Name']}</h2>
+              <p><strong>Father's Name:</strong> ${student["Father's Name"]}</p>
+              <p><strong>Course:</strong> ${student['Course']}</p>
+              <p><strong>City:</strong> ${student['City']}</p>
+              <p class="email"><strong>Email:</strong> ${student['Email']}</p>
+            </div>
+            <div class="student-dob">
+              <strong>DOB:</strong> ${student['Date of Birth']}
+            </div>
+          </div>
+        `;
+        card.addEventListener('click', () => {
+          const studentId = student['Student ID'];
+          currentStudentId = studentId;
+          fetchGradeData(studentId);
+        });
+        cardsGrid.appendChild(card);
+      }
+
+      function displayMessage(message) {
+        cardsGrid.innerHTML = `<p>${message}</p>`;
+      }
+
+      function clearCards() {
+        cardsGrid.innerHTML = '';
+      }
+
+      function loadAllStudents() {
+        const query = searchInput.value;
+        const course = courseFilter.value;
+        google.script.run.withSuccessHandler(students => {
+          clearCards();
+          if (students.length > 0) {
+            students.forEach(student => renderCard(student));
+          } else {
+            displayMessage('No students found.');
+          }
+        }).withFailureHandler(error => {
+          console.error('Error fetching student data:', error);
+          Swal.fire('Error', 'Error loading student data.', 'error');
+        }).searchStudents(query, course);
+      }
+
+      function searchStudents() {
+        loadAllStudents();
+      }
+
+      function fetchGradeData(studentId) {
+        google.script.run.withSuccessHandler(gradeData => {
+          if (gradeData) {
+            populateModal(gradeData);
+          } else {
+            modalBody.innerHTML = `<p>No grade data found for Student ID ${studentId}.</p>`;
+          }
+          openModal();
+        }).withFailureHandler(error => {
+          console.error('Error fetching grade data:', error);
+          Swal.fire('Error', 'Error loading grade data.', 'error');
+        }).getGradeData(studentId);
+      }
+
+      function populateModal(gradeData) {
+        modalBody.innerHTML = `
+          <h2>Grade Details for Student ID ${gradeData['Student ID']}</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Teacher Name</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Teacher Name']}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Class Name</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Class Name']}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Last Year Marks</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Last Year Marks']}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Current Year Marks</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Current Year Marks']}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Teacher Review</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Teacher Review']}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Fee Status</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Fee Status']}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd;"><strong>Previous Fee Clear</strong></td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${gradeData['Previous Fee Clear']}</td>
+            </tr>
+          </table>
+          <button id="edit-button" style="margin-top: 20px; padding: 10px 15px; background-color: #ffc107; color: #fff; border: none; border-radius: 5px; cursor: pointer;">Edit Student Details</button>
+        `;
+        document.getElementById('edit-button').addEventListener('click', () => {
+          enterEditMode(gradeData['Student ID']);
+        });
+      }
+
+      function openModal() {
+        modal.style.display = 'block';
+      }
+
+      function closeModal() {
+        modal.style.display = 'none';
+        resetModal();
+      }
+
+      function resetModal() {
+        modalBody.innerHTML = `<p>Loading grade details...</p>`;
+        editFormDiv.style.display = 'none';
+        studentEditForm.reset();
+      }
+
+      function enterEditMode(studentId) {
+        google.script.run.withSuccessHandler(student => {
+          if (student) {
+            document.getElementById('edit-name').value = student['Name'];
+            document.getElementById('edit-father-name').value = student["Father's Name"];
+            document.getElementById('edit-email').value = student['Email'];
+            document.getElementById('edit-course').value = student['Course'];
+            document.getElementById('edit-city').value = student['City'];
+            document.getElementById('edit-dob').value = student['Date of Birth'];
+            document.getElementById('edit-photo-url').value = student['Photo URL'];
+            editFormDiv.style.display = 'flex';
+            modalBody.innerHTML = '';
+          } else {
+            modalBody.innerHTML = `<p>Student data not found.</p>`;
+          }
+        }).withFailureHandler(error => {
+          console.error('Error fetching student data for edit:', error);
+          Swal.fire('Error', 'Error loading student data.', 'error');
+        }).getStudentById(studentId);
+      }
+
+      studentEditForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const updatedData = {
+          'Name': document.getElementById('edit-name').value.trim(),
+          "Father's Name": document.getElementById('edit-father-name').value.trim(),
+          'Email': document.getElementById('edit-email').value.trim(),
+          'Course': document.getElementById('edit-course').value.trim(),
+          'City': document.getElementById('edit-city').value.trim(),
+          'Date of Birth': document.getElementById('edit-dob').value,
+          'Photo URL': document.getElementById('edit-photo-url').value.trim()
+        };
+        
+        Swal.fire({
+          title: 'Authentication',
+          html:
+            '<input id="swal-input1" class="swal2-input" placeholder="Username">' +
+            '<input id="swal-input2" class="swal2-input" placeholder="Password" type="password">',
+          focusConfirm: false,
+          preConfirm: () => {
+            return [
+              document.getElementById('swal-input1').value,
+              document.getElementById('swal-input2').value
+            ]
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const [username, password] = result.value;
+            if (username && password) {
+              google.script.run.withSuccessHandler(response => {
+                Swal.fire('Success', response, 'success');
+                if (response === 'Student data updated successfully.') {
+                  loadAllStudents();
+                  closeModal();
+                }
+              }).withFailureHandler(error => {
+                console.error('Error updating student data:', error);
+                Swal.fire('Error', 'Error updating student data.', 'error');
+              }).updateStudentData(currentStudentId, updatedData, username, password);
+            } else {
+              Swal.fire('Error', 'Username and password are required.', 'error');
+            }
+          }
+        });
+      });
+
+      cancelEditButton.addEventListener('click', () => {
+        resetModal();
+      });
+
+      searchButton.addEventListener('click', () => {
+        searchStudents();
+      });
+
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          searchStudents();
+        }
+      });
+
+      printButton.addEventListener('click', () => {
+        window.print();
+      });
+
+      closeButton.addEventListener('click', closeModal);
+
+      function loadCourses() {
+        google.script.run.withSuccessHandler(courses => {
+          courses.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course;
+            option.textContent = course;
+            courseFilter.appendChild(option);
+          });
+        }).withFailureHandler(error => {
+          console.error('Error fetching courses:', error);
+          Swal.fire('Error', 'Error loading courses.', 'error');
+        }).getUniqueCourses();
+      }
+
+      loadCourses();
+      loadAllStudents();
+    });
+  </script>
+</body>
+</html>
